@@ -6,16 +6,13 @@
 # Description:
 # Returns a ft file based on a type of input
 
-
 from __future__ import division
 import os
 import sys
 
 from glob import glob
 from subprocess import Popen,PIPE
-
 import pandas as pd
-
 from pymol import cmd
 
 
@@ -29,8 +26,7 @@ def fromList(ftList, ftOrig, ftPathOut):
                     with open(ftPathOut, 'a') as ftOut:
                         ftOut.write(ff)
 
-
-
+                        
 def fromPymolSession(session, ftOrig, ftPathOut):
     """Writes one or more FT files based on ligand names that are saved to a 
     given PyMOL session.
@@ -87,7 +83,6 @@ def fromPymolSession(session, ftOrig, ftPathOut):
             print("Check to see if the ligands in the PyMOL session are formatted as: *.ft_entry.ft_file.00.pdb ")
 
 
-
 def fromReport(report, ftOrig, ftPathOut):
     """Writes a FT file based on a RMSD Report generated from ./rmsd.reportRMSD
     """
@@ -99,4 +94,3 @@ def fromReport(report, ftOrig, ftPathOut):
                 bn = line.split('\t')[0]
                 entries.append(bn)
         fromList(entires, ftOrig, ftPathOut)
-
