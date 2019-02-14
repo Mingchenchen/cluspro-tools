@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
 # ./filter.py
 
 # Description:
 # TODO: Make better documenation
-
-
 
 
 from __future__ import division
@@ -21,10 +18,8 @@ import pdb
 
 from glob import glob
 from subprocess import Popen,PIPE
-
 from pymol import cmd, stored, math
 import numpy as np
-
 
 
 # gets the atom1, atom2 and max from output_path and runs func(vdwClash)
@@ -45,7 +40,6 @@ def doWeClash(output_path):
             cnt += 1
     print ("Number of pwd clashes: {} \t Number of pwd in interface: {}").format(len(clash_count), cnt)
     return (len(clash_count)/cnt)
-
 
 
 def pairwise_dist(sel1, sel2, max_dist, output_path, output="N", sidechain="N", show="N"):
@@ -118,8 +112,6 @@ def pairwise_dist(sel1, sel2, max_dist, output_path, output="N", sidechain="N", 
 cmd.extend("pairwise_dist", pairwise_dist)
 
 
-
-
 def vdwClash(atom1, atom2, dist, threshold):
     
     h_vdw = 1.1
@@ -131,7 +123,6 @@ def vdwClash(atom1, atom2, dist, threshold):
     s_vdw = 1.8
     cl_vdw = 1.75
 
-    
     atomone=atom1[0]
     atomtwo=atom2[0]
     
@@ -158,7 +149,6 @@ def vdwClash(atom1, atom2, dist, threshold):
     vdw_dist = atom1 + atom2
     clash_dist = vdw_dist*threshold - float(dist)
     return clash_dist
-
 
 
 def reportFilter(rotationFile, ftFile, alignMap, masterLig, pwPathA, pwPathB):
@@ -222,4 +212,3 @@ def reportFilter(rotationFile, ftFile, alignMap, masterLig, pwPathA, pwPathB):
                 cmd.delete("{}".format(MOL2))
                 count = count + 1
                 good_Clash.append(count)
-
