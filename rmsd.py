@@ -7,7 +7,6 @@
 # Calculates an rmsd for based on a ligand 
 # and a crystallized ligand
 
-
 from __future__ import division
 from subprocess import Popen,PIPE
 
@@ -31,7 +30,6 @@ def reportRMSD(ligfile, ligcrys, ftfile, rotprm, output):
     print cmd
     proc = Popen(cmd, shell=True, stderr=PIPE, stdout=PIPE)
     so,se = proc.communicate()
-
 
 
 def graphRMSD():
