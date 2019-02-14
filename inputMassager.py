@@ -11,9 +11,6 @@
 # returns useful files for subsequent analysis
 
 
-# In[ ]:
-
-
 from __future__ import division
 
 import os
@@ -22,8 +19,6 @@ import shutil
 
 from subprocess import Popen,PIPE
 
-
-# In[ ]:
 
 
 def extractThings(things, newThingsDir=None):
@@ -59,8 +54,6 @@ def extractThings(things, newThingsDir=None):
         print cmd 
 
 
-# In[ ]:
-
 
 def idInputs(jobFolder, ligCrys=None):
     """Returns the ft files (ft*), ligand (lig), 
@@ -90,8 +83,6 @@ def idInputs(jobFolder, ligCrys=None):
     else: 
         print ("Input folder does not have a valid path")
 
-
-# In[ ]:
 
 
 def makeSession(jobFolder, sessionFolder, ligCrys=None, multiSession=None):
