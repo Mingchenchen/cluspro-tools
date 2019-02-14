@@ -1,14 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
 # ./pdb.py
 
 # Description:
 # TODO: Make better documenation
-
-
-
 
 from __future__ import division
 
@@ -25,7 +21,6 @@ from pymol import cmd, stored, math
 import numpy as np
 
 
-
 def loadSession(session):
     """
     Loads a given PyMOL Session (e.g., an align-map)
@@ -34,9 +29,7 @@ def loadSession(session):
     pymol.finish_launching()
     cmd.load(session) # otherwise stops @ error 'PyMOL not running, entering library mode (experimental)'
 
-
-
-
+    
 def read_rotations(filepath, limit=None):
     """
     Reads 3x3 rotation matrices from a file.
@@ -51,6 +44,7 @@ def read_rotations(filepath, limit=None):
     with open(filepath, 'r') as stream:
         return read_rotations_stream(stream, limit)
 
+    
 def read_rotations_stream(stream, limit=None):
     """
     Read rotations from a stream.
@@ -69,8 +63,6 @@ def read_rotations_stream(stream, limit=None):
     return rotations.reshape(-1, 3, 3)
 
 
-
-
 def read_ftresults(filepath, limit=None):
     """
     Reads ftresults from a file.
@@ -79,6 +71,7 @@ def read_ftresults(filepath, limit=None):
     """
     with open(filepath, "r") as f:
         return read_ftresults_stream(f, limit)
+    
     
 def read_ftresults_stream(stream, limit=None):
     """
@@ -96,9 +89,6 @@ def read_ftresults_stream(stream, limit=None):
         dtype=FTRESULT_DTYPE,
         usecols=(0, 1, 2, 3, 4))
 
-
-
-
 def getCenterandTV(atom_group, ftresults, rotations, center=None):
     orig_coords = atom_group.getCoords()
     if center is None:
@@ -106,8 +96,6 @@ def getCenterandTV(atom_group, ftresults, rotations, center=None):
     post_tv = np.expand_dims(ftresults['tv'] + center, 1)
     center = center * -1
     return center, post_tv
-
-
 
 
 def getTTT(ft, rot, center, post_tv):
@@ -132,15 +120,12 @@ def getTTT(ft, rot, center, post_tv):
     return pymolMatrix
 
 
-
 def transformInputs(rotation_stream, entry, master_lig, lig_name):
     master_lig_pdb = parsePDB(master_lig)
     centers, post_tv = getCenterandTV(master_lig_pdb, entry, rotation_stream)
     TTT = getTTT(entry, rotation_stream, centers, post_tv)
     target = cmd.get_object_list("{}".format(lig_name))
     return target, TTT
-
-
 
 
 def genPDBinPymol(rotationFile, ftentry, masterLig):
@@ -156,8 +141,7 @@ def genPDBinPymol(rotationFile, ftentry, masterLig):
     cmd.transform_selection("{}".format(lig), matrix)
 
 
-
-def genPDB(outPath, clusterFile, ft, rotprm, ligFile, ftGenTemp):
+    def genPDB(outPath, clusterFile, ft, rotprm, ligFile, ftGenTemp):
     """Usage: sblu docking gen_cluster_pdb [OPTIONS] CLUSTERFILE FTFILE ROTPRM
                                     LIG_FILE
 
