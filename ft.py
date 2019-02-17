@@ -15,7 +15,6 @@ from glob import glob
 from subprocess import Popen,PIPE
 
 import pandas as pd
-
 from pymol import cmd
 
 
@@ -28,7 +27,6 @@ def fromList(ftList, ftOrig, ftPathOut):
                 if num == int(entry):
                     with open(ftPathOut, 'a') as ftOut:
                         ftOut.write(ff)
-
 
 
 def fromPymolSession(session, ftOrig, ftPathOut):
@@ -87,16 +85,15 @@ def fromPymolSession(session, ftOrig, ftPathOut):
             print("Check to see if the ligands in the PyMOL session are formatted as: *.ft_entry.ft_file.00.pdb ")
 
 
-
-def fromReport(report, ftOrig, ftPathOut):
+def fromReport(report, ftOrig, ftPathOut, cluster=None):
     """Writes a FT file based on a RMSD Report generated from ./rmsd.reportRMSD
     """
+    entries = []
     if cluster is None:
-        entries = []
         with open(report, 'r') as rf:
             lines = rf.readlines()[1:]
             for line in lines:
                 bn = line.split('\t')[0]
                 entries.append(bn)
-        fromList(entires, ftOrig, ftPathOut)
+        fromList(entries, ftOrig, ftPathOut)
 
