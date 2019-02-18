@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
 # ./filter.py
 
 # Description:
 # TODO: Make better documenation
 
 
+import numpy as np
+from pymol import cmd, stored, math
+from subprocess import Popen, PIPE
 from __future__ import division
 
 import os
@@ -18,11 +20,13 @@ from prody import *
 import pdb
 
 from glob import glob
-from subprocess import Popen, PIPE
+<< << << < HEAD
 
-from pymol import cmd, stored, math
-import numpy as np
 
+== == == =
+
+
+>>>>>> > 81e65810dffccb70122ddebd126a5ce0ec6fb26c
 # gets the atom1, atom2 and max from output_path and runs func(vdwClash)
 
 
@@ -132,10 +136,12 @@ def vdwClash(atom1, atom2, dist, threshold):
     s_vdw = 1.8
     cl_vdw = 1.75
 
-    atomone = atom1[0]
-    atomtwo = atom2[0]
 
-    if atomone == 'H':
+<< << << < HEAD
+ atomone = atom1[0]
+  atomtwo = atom2[0]
+
+   if atomone == 'H':
         atom1 = h_vdw
     if atomone == 'C':
         if atom1[0:1] == 'Cl':
