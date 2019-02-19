@@ -1,24 +1,24 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+
 # ./pdb.py
 
 # Description:
 # TODO: Make better documenation
 
+
 from __future__ import division
 
 import os
-import linecache
 from itertools import islice
 import math
 from prody import *
-
-from glob import glob
-from subprocess import Popen,PIPE
-
+from subprocess import Popen, PIPE
 from pymol import cmd, stored, math
 import numpy as np
+
+FTRESULT_DTYPE = np.dtype([('roti', 'i4'), ('tv', ('f8', 3))])
 
 
 def loadSession(session):
@@ -27,9 +27,9 @@ def loadSession(session):
     """
     cmd.load(session)
     pymol.finish_launching()
-    cmd.load(session) # otherwise stops @ error 'PyMOL not running, entering library mode (experimental)'
+    cmd.load(session)  # otherwise stops @ error 'PyMOL not running, entering library mode (experimental)'
 
-    
+
 def read_rotations(filepath, limit=None):
     """
     Reads 3x3 rotation matrices from a file.
@@ -44,7 +44,7 @@ def read_rotations(filepath, limit=None):
     with open(filepath, 'r') as stream:
         return read_rotations_stream(stream, limit)
 
-    
+
 def read_rotations_stream(stream, limit=None):
     """
     Read rotations from a stream.
@@ -71,8 +71,8 @@ def read_ftresults(filepath, limit=None):
     """
     with open(filepath, "r") as f:
         return read_ftresults_stream(f, limit)
-    
-    
+
+
 def read_ftresults_stream(stream, limit=None):
     """
     Read ftresults from a stream.
@@ -89,10 +89,11 @@ def read_ftresults_stream(stream, limit=None):
         dtype=FTRESULT_DTYPE,
         usecols=(0, 1, 2, 3, 4))
 
+
 def getCenterandTV(atom_group, ftresults, rotations, center=None):
     orig_coords = atom_group.getCoords()
     if center is None:
-        center = np.mean(orig_coords, axis=0)  
+        center = np.mean(orig_coords, axis=0)
     post_tv = np.expand_dims(ftresults['tv'] + center, 1)
     center = center * -1
     return center, post_tv
@@ -100,13 +101,13 @@ def getCenterandTV(atom_group, ftresults, rotations, center=None):
 
 def getTTT(ft, rot, center, post_tv):
     """
-    Arguments include: 
+    Arguments include:
     ft --> output from read_ftresults_stream
     rot --> output from read_rotations_stream
     center --> output from getCenterandTV
     post_tv --> output from getCeneterandTV
-    
-    Will return a PyMOL happy matrix (4x4) with the top-left most 
+
+    Will return a PyMOL happy matrix (4x4) with the top-left most
     (3x3) is a rotation matrix, the right (3x1) is a post-rotation
     translation vector (accounting for the center) and the bottom
     (1x4) is the pre-rotational matrix ([-1]*center)
@@ -114,7 +115,7 @@ def getTTT(ft, rot, center, post_tv):
 
     rot_number = ft['roti']
     rot_matrix = rot[rot_number]
-    pymolMatrix = np.append(rot_matrix, post_tv, axis = 1)
+    pymolMatrix = np.append(rot_matrix, post_tv, axis=1)
     zeros = np.append(center, '1')
     pymolMatrix = np.append(pymolMatrix, zeros)
     return pymolMatrix
@@ -141,7 +142,7 @@ def genPDBinPymol(rotationFile, ftentry, masterLig):
     cmd.transform_selection("{}".format(lig), matrix)
 
 
-    def genPDB(outPath, clusterFile, ft, rotprm, ligFile, ftGenTemp):
+def genPDB(outPath, clusterFile, ft, rotprm, ligFile, ftGenTemp):
     """Usage: sblu docking gen_cluster_pdb [OPTIONS] CLUSTERFILE FTFILE ROTPRM
                                     LIG_FILE
 
@@ -161,7 +162,6 @@ def genPDBinPymol(rotationFile, ftentry, masterLig):
                 ft_gen_pdb.write(ftentry)
                 ft_gen_pdb.flush()
                 cmd = 'sblu docking gen_cluster_pdb -o {out}/{num} {clusterFile} {ft_gen_pdb} {rotprm} {ligFile}'
-                print cmd
+                print(cmd)
                 proc = Popen(cmd, shell=True, stderr=PIPE, stdout=PIPE)
-                so,se = proc.communicate()
-
+                so, se = proc.communicate()

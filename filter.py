@@ -20,13 +20,7 @@ from prody import *
 import pdb
 
 from glob import glob
-<< << << < HEAD
 
-
-== == == =
-
-
->>>>>> > 81e65810dffccb70122ddebd126a5ce0ec6fb26c
 # gets the atom1, atom2 and max from output_path and runs func(vdwClash)
 
 

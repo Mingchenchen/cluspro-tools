@@ -4,11 +4,11 @@
 # ./rmsd.py
 
 # Description:
-# Calculates an rmsd for based on a ligand 
+# Calculates an rmsd for based on a ligand
 # and a crystallized ligand
 
 from __future__ import division
-from subprocess import Popen,PIPE
+from subprocess import Popen, PIPE
 
 
 def reportRMSD(ligfile, ligcrys, ftfile, rotprm, output):
@@ -29,9 +29,9 @@ def reportRMSD(ligfile, ligcrys, ftfile, rotprm, output):
     cmd = 'sblu measure ftrmsd -o {output} {ligfile} {ligcrys} {ftfile} {rotprm}'
     print cmd
     proc = Popen(cmd, shell=True, stderr=PIPE, stdout=PIPE)
-    so,se = proc.communicate()
+    so, se = proc.communicate()
 
 
 def graphRMSD():
-	#TODO: - Need to fix matplotlib depedency issues on main PC
-	# For now, implement this on PHOSTIA-mobile
+        # TODO: - Need to fix matplotlib depedency issues on main PC
+        # For now, implement this on PHOSTIA-mobile
