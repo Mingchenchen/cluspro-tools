@@ -130,8 +130,6 @@ def vdwClash(atom1, atom2, dist, threshold):
     s_vdw = 1.8
     cl_vdw = 1.75
 
-
-<< << << < HEAD
  atomone = atom1[0]
   atomtwo = atom2[0]
 
@@ -176,14 +174,15 @@ def vdwClash(atom1, atom2, dist, threshold):
     return clash_dist
 
 
-def reportFilter(rotationFile, ftFile, alignMap, masterLig, pwPathA, pwPathB):
+def reportFilter(rotationFile, ftFile, alignMap, masterLig, linkerLength, threshold, percent_threshold):
 
     rotationStream = read_rotations(rotationFile)
     ftStream = read_ftresults(ftFile)
     count = 0
-    threshold = input("Enter a vDw percent threshold (e.g., 0.8)")
     atom1 = input("Enter the atom from the mol1 (e.g., /mol1/I/D/301/CCA)")
     atom2 = input("Enter the atom from the mol2 (e.g., /mol2/I/D/301/CCL)")
+    output_path1 = input("Enter a first output path for pwd calculations")
+    output_path = input("Enter a second output path for pwd calculations")
     good_linker = []
     good_Clash = []
     linker_distances = []
@@ -218,10 +217,10 @@ def reportFilter(rotationFile, ftFile, alignMap, masterLig, pwPathA, pwPathB):
                       output_path=output_path1, output="P", sidechain="Y")
         pairwise_dist("mol1", "lig_interface2", "4",
                       output_path=output_path2, output="P", sidechain="Y")
-        if doWeClash(output_path1) > percent_threshold:
+        if doWeClash(output_path1, threshold) > percent_threshold:
             cmd.delete("{}".format(MOL2))
             count = count + 1
-        elif doWeClash(output_path2) > percent_threshold:
+        elif doWeClash(output_path2, threshold) > percent_threshold:
             cmd.delete("{}".format(MOL2))
             count = count + 1
         else:
@@ -229,7 +228,7 @@ def reportFilter(rotationFile, ftFile, alignMap, masterLig, pwPathA, pwPathB):
             dst = cmd.get_distance(atom1, atom2, state=0)
             print("{} was not clashing with a tolerence of {} percent".format(
                 count, threshold, percent_threshold))
-            if dst < 20.0:
+            if dst < linkerLength:
                 cmd.delete("{}".format(MOL2))
                 print("{} was a good linker with a distance of {}".format(count, dst))
                 count = count + 1
