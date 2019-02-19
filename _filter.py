@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# ./filter.py
+# ./_filter.py
 
 # Description:
 # TODO: Make better documenation
