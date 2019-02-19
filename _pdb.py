@@ -2,7 +2,7 @@
 # coding: utf-8
 
 
-# ./pdb.py
+# ./_pdb.py
 
 # Description:
 # TODO: Make better documenation
