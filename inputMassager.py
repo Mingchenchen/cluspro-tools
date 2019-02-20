@@ -43,7 +43,6 @@ def extractThings(things, newThingsDir=None):
         proc = Popen(cmd, shell=True, stderr=PIPE, stdout=PIPE)
         proc.communicate()
         print cmd
-        print "test"
 
     else:
         newThingsPath = os.path.join(newThingsDir, newThings)

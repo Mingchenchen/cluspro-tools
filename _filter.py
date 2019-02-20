@@ -169,40 +169,43 @@ def vdwClash(atom1, atom2, dist, threshold):
     return clash_dist
 
 
-def reportFilter(linkerLength, threshold, percent_threshold, count, pwd1, pwd2, atom1, atom2, outputSummary):
-    good_linker = []
-    good_Clash = []
-    linker_distances = []
+def getInterface(count, chain, pwd1, pwd2):
     MOL2 = cmd.get_object_list("{}".format(count))
     MOL2 = ''.join(MOL2)  # Needed to format so PyMOL is happy
     MOL1 = cmd.get_object_list("rec-mol1")
     MOL1 = ''.join(MOL1)  # Needed to format so PyMOL is happy
     MOBILE = cmd.get_object_list("mobile-mol2")
     MOBILE = ''.join(MOBILE)  # Needed to format so PyMOL is happy
-
     cmd.align(MOBILE, MOL2)
     cmd.copy("{}.mol2".format(MOL2), MOBILE)
     cmd.delete("{}".format(MOL2))
     cmd.set_name("{}.mol2".format(MOL2), "{}".format(MOL2))
-    cmd.select("mol2", "{} and not chain B".format(MOL2))
-
+    cmd.select("mol2", "{} and not chain {}".format(MOL2, chain))
     cmd.select("lig_interface1", "rec-mol1 within 10.0 of mol2")
     cmd.select("lig_interface2", "{} within 10.0 of mol1".format(MOL2))
     atomcnt1 = cmd.count_atoms("lig_interface1")
     atomcnt2 = cmd.count_atoms("lig_interface2")
-    pairwise_dist("mol2", "lig_interface1", "4",
+    pairwise_dist("mol2", "lig_interface1", "5",
                   output_path=pwd1, output="P", sidechain="Y")
-    pairwise_dist("mol1", "lig_interface2", "4",
+    pairwise_dist("mol1", "lig_interface2", "5",
                   output_path=pwd2, output="P", sidechain="Y")
+    return atomcnt1, atomcnt2, MOL2
+
+
+def reportFilter(linkerLength, threshold, percent_threshold, count, pwd1, pwd2, atom1, atom2, outputSummary, cnt1, cnt2, MOL2):
+    good_linker = []
+    good_Clash = []
+    linker_distances = []
+    atomcnt1 = cnt1
+    atomcnt2 = cnt2
+
     if doWeClash(pwd1, threshold) > percent_threshold:
-        cmd.delete("{}".format(MOL2))
+        pass
     elif doWeClash(pwd2, threshold) > percent_threshold:
-        cmd.delete("{}".format(MOL2))
+        pass
     else:
-        atom2 = atom2.replace("mol2", MOL2)
-        dst = cmd.get_distance(atom1, atom2, state=0)
+        dst = cmd.get_distance("{}".format(atom1), "{}".format(atom2))
         if dst < linkerLength:
-            cmd.delete("{}".format(MOL2))
             with open(outputSummary, "a") as sf:
                 outSumEntry = (str(count) + "\t" + str(dst) + "\n")
                 sf.write(outSumEntry)
@@ -211,5 +214,4 @@ def reportFilter(linkerLength, threshold, percent_threshold, count, pwd1, pwd2, 
             good_Clash.append(count)
             linker_distances.append(dst)
         else:
-            cmd.delete("{}".format(MOL2))
             good_Clash.append(count)
