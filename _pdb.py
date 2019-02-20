@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+
+# !/usr/bin/env python
 # coding: utf-8
 
 
@@ -7,30 +8,20 @@
 # Description:
 # TODO: Make better documenation
 
-
 from __future__ import division
-
-import os
-from itertools import islice
-import math
-from prody import *
-from subprocess import Popen, PIPE
-from pymol import cmd, stored, math
 import numpy as np
+from pymol import cmd, stored, math
+from subprocess import Popen, PIPE
+from prody import *
+import math
+from itertools import islice
+import os
+
 
 FTRESULT_DTYPE = np.dtype([('roti', 'i4'), ('tv', ('f8', 3))])
 
 
-def loadSession(session):
-    """
-    Loads a given PyMOL Session (e.g., an align-map)
-    """
-    cmd.load(session)
-    pymol.finish_launching()
-    cmd.load(session)  # otherwise stops @ error 'PyMOL not running, entering library mode (experimental)'
-
-
-def read_rotations(filepath, limit=None):
+def readRotations(filePath, limit=None):
     """
     Reads 3x3 rotation matrices from a file.
 
@@ -41,11 +32,11 @@ def read_rotations(filepath, limit=None):
     matrices), where N is the smaller of number of rotations in the file and limit,
     if limit is provided.
     """
-    with open(filepath, 'r') as stream:
-        return read_rotations_stream(stream, limit)
+    with open(filePath, 'r') as stream:
+        return readRotationsStream(stream, limit)
 
 
-def read_rotations_stream(stream, limit=None):
+def readRotationsStream(stream, limit=None):
     """
     Read rotations from a stream.
 
@@ -63,21 +54,21 @@ def read_rotations_stream(stream, limit=None):
     return rotations.reshape(-1, 3, 3)
 
 
-def read_ftresults(filepath, limit=None):
+def readFTResults(filePath, limit=None):
     """
-    Reads ftresults from a file.
+    Reads ftResults from a file.
 
-    See read_ftresults_stream for details.
+    See readFTResultsStream for details.
     """
-    with open(filepath, "r") as f:
-        return read_ftresults_stream(f, limit)
+    with open(filePath, "r") as f:
+        return readFTResultsStream(f, limit)
 
 
-def read_ftresults_stream(stream, limit=None):
+def readFTResultsStream(stream, limit=None):
     """
-    Read ftresults from a stream.
+    Read ftResults from a stream.
 
-    Ftresults are assumed to be in a text file with at least 5
+    ftResults are assumed to be in a text file with at least 5
     columns.  The first column will be the rotation index. The next
     three columns are the translation vector, and the last column is
     the total weighted energy.
@@ -90,22 +81,22 @@ def read_ftresults_stream(stream, limit=None):
         usecols=(0, 1, 2, 3, 4))
 
 
-def getCenterandTV(atom_group, ftresults, rotations, center=None):
-    orig_coords = atom_group.getCoords()
+def getCenterandTV(atomGroup, ftResults, rotations, center=None):
+    orig_coords = atomGroup.getCoords()
     if center is None:
         center = np.mean(orig_coords, axis=0)
-    post_tv = np.expand_dims(ftresults['tv'] + center, 1)
+    postTV = np.expand_dims(ftResults['tv'] + center, 1)
     center = center * -1
-    return center, post_tv
+    return center, postTV
 
 
-def getTTT(ft, rot, center, post_tv):
+def getTTT(ft, rot, center, postTV):
     """
     Arguments include:
-    ft --> output from read_ftresults_stream
-    rot --> output from read_rotations_stream
-    center --> output from getCenterandTV
-    post_tv --> output from getCeneterandTV
+    ft-output fromread_ftresults_stream
+    rot-output fromread_rotations_stream
+    center-output fromgetCenterandTV
+    postTV-output fromgetCeneterandTV
 
     Will return a PyMOL happy matrix (4x4) with the top-left most
     (3x3) is a rotation matrix, the right (3x1) is a post-rotation
@@ -115,24 +106,22 @@ def getTTT(ft, rot, center, post_tv):
 
     rot_number = ft['roti']
     rot_matrix = rot[rot_number]
-    pymolMatrix = np.append(rot_matrix, post_tv, axis=1)
+    pymolMatrix = np.append(rot_matrix, postTV, axis=1)
     zeros = np.append(center, '1')
     pymolMatrix = np.append(pymolMatrix, zeros)
     return pymolMatrix
 
 
-def transformInputs(rotation_stream, entry, master_lig, lig_name):
-    master_lig_pdb = parsePDB(master_lig)
-    centers, post_tv = getCenterandTV(master_lig_pdb, entry, rotation_stream)
-    TTT = getTTT(entry, rotation_stream, centers, post_tv)
-    target = cmd.get_object_list("{}".format(lig_name))
+def transformInputs(rotationStream, entry, masterLig, ligName):
+    master_lig_pdb = parsePDB(masterLig)
+    centers, postTV = getCenterandTV(master_lig_pdb, entry, rotationStream)
+    TTT = getTTT(entry, rotationStream, centers, postTV)
+    target = cmd.get_object_list("{}".format(ligName))
     return target, TTT
 
 
-def genPDBinPymol(rotationFile, ftentry, masterLig):
-    rotationStream = read_rotations(rotationFile)
-    cmd.load(masterLig)
-    name = os.path.basename(masterLig)
+def genPDBinPymol(rotationFile, ftentry, masterLig, name):
+    rotationStream = readRotations(rotationFile)
     lig, matrix = transformInputs(rotationStream, ftentry, masterLig, name)
 
     # Formatting stuff

@@ -128,3 +128,25 @@ def makeSession(jobFolder, sessionFolder, ligCrys=None, multiSession=None):
                         extractThings(item, out)
                         shutil.copy(sessionInputs[-2], out)
                         shutil.copy(sessionInputs[-1], out)
+
+
+def getInputs(job):
+    rotprm = glob(os.path.join(job[0], 'rot70k.*'))
+    lig = glob(os.path.join(job[0], 'lig.pdb'))
+    ft000 = glob(os.path.join(job[0], 'ft.000.*'))
+    ft002 = glob(os.path.join(job[0], 'ft.002.*'))
+    ft004 = glob(os.path.join(job[0], 'ft.004.*'))
+    ft006 = glob(os.path.join(job[0], 'ft.006.*'))
+    inputs = ft000 + ft002 + ft004 + ft006 + lig + rotprm
+    return inputs
+
+
+def idSessionFolder(complexFolder):
+    jobs = []
+    for i in os.listdir(complexFolder):
+        jobs.append(os.path.join(complexFolder, i))
+    x = []
+    for job in jobs:
+        y = getInputs(glob(job))
+        x.append(y)
+    return x

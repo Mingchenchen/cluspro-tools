@@ -6,25 +6,22 @@
 # Description:
 # TODO: Make better documenation
 
-
+from __future__ import division
 import numpy as np
 from pymol import cmd, stored, math
 from subprocess import Popen, PIPE
-from __future__ import division
-
 import os
 import linecache
 from itertools import islice
 import math
 from prody import *
 import pdb
-
 from glob import glob
 
 # gets the atom1, atom2 and max from output_path and runs func(vdwClash)
 
 
-def doWeClash(output_path):
+def doWeClash(output_path, threshold):
     with open(output_path, 'r') as rf:
         line = rf.readline()
         cnt = 1
@@ -33,12 +30,11 @@ def doWeClash(output_path):
             atom1 = (line.split(' ')[0]).split('/')[-1]
             atom2 = (line.split(' ')[2]).split('/')[-1]
             distance = (line.split(' ')[3]).split('\n')[0]
-            clash_d = vdwClash(atom1, atom2, distance)
+            clash_d = vdwClash(atom1, atom2, distance, threshold)
             if clash_d > threshold:
                 clash_count.append(clash_d)
             line = rf.readline()
             cnt += 1
-    print("Number of pwd clashes: {} \t Number of pwd in interface: {}").format(len(clash_count), cnt)
     return (len(clash_count) / cnt)
 
 
@@ -108,8 +104,7 @@ def pairwise_dist(sel1, sel2, max_dist, output_path, output="N", sidechain="N", 
         f = open(output_path, 'w')
         f.write(s)
         f.close()
-        print "Results saved in {}".format(output_path)
-    print "Number of distances calculated: %s" % (counter)
+    # print "Number of distances calculated: %s" % (counter)
     cmd.hide("lines", "IntRes_*")
     if show == "Y":
         cmd.show("lines", "IntRes_"+max_dist)
@@ -130,10 +125,10 @@ def vdwClash(atom1, atom2, dist, threshold):
     s_vdw = 1.8
     cl_vdw = 1.75
 
- atomone = atom1[0]
-  atomtwo = atom2[0]
+    atomone = atom1[0]
+    atomtwo = atom2[0]
 
-   if atomone == 'H':
+    if atomone == 'H':
         atom1 = h_vdw
     if atomone == 'C':
         if atom1[0:1] == 'Cl':
@@ -174,68 +169,47 @@ def vdwClash(atom1, atom2, dist, threshold):
     return clash_dist
 
 
-def reportFilter(rotationFile, ftFile, alignMap, masterLig, linkerLength, threshold, percent_threshold):
-
-    rotationStream = read_rotations(rotationFile)
-    ftStream = read_ftresults(ftFile)
-    count = 0
-    atom1 = input("Enter the atom from the mol1 (e.g., /mol1/I/D/301/CCA)")
-    atom2 = input("Enter the atom from the mol2 (e.g., /mol2/I/D/301/CCL)")
-    output_path1 = input("Enter a first output path for pwd calculations")
-    output_path = input("Enter a second output path for pwd calculations")
+def reportFilter(linkerLength, threshold, percent_threshold, count, pwd1, pwd2, atom1, atom2, outputSummary):
     good_linker = []
     good_Clash = []
     linker_distances = []
-    loadSession(alignMap)
+    MOL2 = cmd.get_object_list("{}".format(count))
+    MOL2 = ''.join(MOL2)  # Needed to format so PyMOL is happy
+    MOL1 = cmd.get_object_list("rec-mol1")
+    MOL1 = ''.join(MOL1)  # Needed to format so PyMOL is happy
+    MOBILE = cmd.get_object_list("mobile-mol2")
+    MOBILE = ''.join(MOBILE)  # Needed to format so PyMOL is happy
 
-    for entry in ftStream:
+    cmd.align(MOBILE, MOL2)
+    cmd.copy("{}.mol2".format(MOL2), MOBILE)
+    cmd.delete("{}".format(MOL2))
+    cmd.set_name("{}.mol2".format(MOL2), "{}".format(MOL2))
+    cmd.select("mol2", "{} and not chain B".format(MOL2))
 
-        # Step 1
-        genPDBinPymol(rotationFile, entry, masterLig)
-
-        # Step 2
-        MOL2 = cmd.get_object_list("{}".format(count))
-        MOL2 = ''.join(MOL2)  # Needed to format so PyMOL is happy
-        MOL1 = cmd.get_object_list("rec-mol1")
-        MOL1 = ''.join(MOL1)  # Needed to format so PyMOL is happy
-        MOBILE = cmd.get_object_list("mobile-mol2")
-        MOBILE = ''.join(MOBILE)  # Needed to format so PyMOL is happy
-
-        # Step 3
-        cmd.align(MOBILE, MOL2)
-        cmd.copy("{}.mol2".format(MOL2), MOBILE)
+    cmd.select("lig_interface1", "rec-mol1 within 10.0 of mol2")
+    cmd.select("lig_interface2", "{} within 10.0 of mol1".format(MOL2))
+    atomcnt1 = cmd.count_atoms("lig_interface1")
+    atomcnt2 = cmd.count_atoms("lig_interface2")
+    pairwise_dist("mol2", "lig_interface1", "4",
+                  output_path=pwd1, output="P", sidechain="Y")
+    pairwise_dist("mol1", "lig_interface2", "4",
+                  output_path=pwd2, output="P", sidechain="Y")
+    if doWeClash(pwd1, threshold) > percent_threshold:
         cmd.delete("{}".format(MOL2))
-        cmd.set_name("{}.mol2".format(MOL2), "{}".format(MOL2))
-        cmd.select("mol2", "{} and not chain X".format(MOL2))
-
-        # Step 4
-        cmd.select("lig_interface1", "rec-mol1 within 10.0 of mol2")
-        cmd.select("lig_interface2", "{} within 10.0 of mol1".format(MOL2))
-        atomcnt1 = cmd.count_atoms("lig_interface1")
-        atomcnt2 = cmd.count_atoms("lig_interface2")
-        pairwise_dist("mol2", "lig_interface1", "4",
-                      output_path=output_path1, output="P", sidechain="Y")
-        pairwise_dist("mol1", "lig_interface2", "4",
-                      output_path=output_path2, output="P", sidechain="Y")
-        if doWeClash(output_path1, threshold) > percent_threshold:
+    elif doWeClash(pwd2, threshold) > percent_threshold:
+        cmd.delete("{}".format(MOL2))
+    else:
+        atom2 = atom2.replace("mol2", MOL2)
+        dst = cmd.get_distance(atom1, atom2, state=0)
+        if dst < linkerLength:
             cmd.delete("{}".format(MOL2))
-            count = count + 1
-        elif doWeClash(output_path2, threshold) > percent_threshold:
-            cmd.delete("{}".format(MOL2))
-            count = count + 1
+            with open(outputSummary, "a") as sf:
+                outSumEntry = (str(count) + "\t" + str(dst) + "\n")
+                sf.write(outSumEntry)
+                sf.close()
+            good_linker.append(count)
+            good_Clash.append(count)
+            linker_distances.append(dst)
         else:
-            atom2 = atom2.replace("mol2", MOL2)
-            dst = cmd.get_distance(atom1, atom2, state=0)
-            print("{} was not clashing with a tolerence of {} percent".format(
-                count, threshold, percent_threshold))
-            if dst < linkerLength:
-                cmd.delete("{}".format(MOL2))
-                print("{} was a good linker with a distance of {}".format(count, dst))
-                count = count + 1
-                good_linker.append(count)
-                good_Clash.append(count)
-                linker_distances.append(dst)
-            else:
-                cmd.delete("{}".format(MOL2))
-                count = count + 1
-                good_Clash.append(count)
+            cmd.delete("{}".format(MOL2))
+            good_Clash.append(count)
