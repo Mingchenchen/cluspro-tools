@@ -12,7 +12,7 @@ from __future__ import division
 from subprocess import Popen, PIPE
 
 
-def pwrmsd(pdbFile, ftFile, rotPRM, number):
+def pwrmsd(pdbFile, ftFile, rotPRM, num):
 
 """
 sblu measure pwrmsd [OPTIONS] PDB_FILE FTFILE ROTPRM
@@ -28,7 +28,7 @@ Options:
   --help
 """
 
-cmd = 'sblu measure pwrmsd -n {number} {pdbFile} {ftFile} {rotPRM}'
+cmd = 'sblu measure pwrmsd -n {num} {pdbFile} {ftFile} {rotPRM}'
 print(cmd)
 proc = Popen(cmd, shell=True, stderr=PIPE, stdout=PIPE)
 so, se = proc.communicate()
