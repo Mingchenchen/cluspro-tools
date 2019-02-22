@@ -136,7 +136,7 @@ def getInputs(job):
     ft002 = glob(os.path.join(job[0], 'ft.002.*'))
     ft004 = glob(os.path.join(job[0], 'ft.004.*'))
     ft006 = glob(os.path.join(job[0], 'ft.006.*'))
-    inputs = ft000 + ft002 + ft004 + ft006 + lig + rotprm
+    inputs = ft000 + ft002 + ft004 + ft006 + rotprm
     return inputs
 
 
