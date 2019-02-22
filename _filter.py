@@ -81,7 +81,7 @@ def getVDW(atomName):
     return vdwSwitch.get(atomName)
 
 
-def reportFilter(atoms1, atoms2, distances, tolerance, percentThreshold, linkerLength, atom1, atom2, out, num, somefile, dic, cutoff):
+def reportFilter(atoms1, atoms2, distances, tolerance, percentThreshold, linkerLength, atom1, atom2, out, num, outFile, dEntries, cutoff):
     """Writes to disk the FT entry number and correponding linker length that passes filter parameters
 
     Arguments:
@@ -99,26 +99,24 @@ def reportFilter(atoms1, atoms2, distances, tolerance, percentThreshold, linkerL
 
         dst = cmd.get_distance("{}".format(atom1), "{}".format(atom2))
         if dst < linkerLength:
-            if out in dic:
-                if dic[out] == int(cutoff):
-                    print "wtf"
-                    print sum(dic.values())//18
-                    if len(dic.keys()) == 18:
-                        if sum(dic.values())//18 == int(cutoff):
+            if out in dEntries:
+                if dEntries[out] == int(cutoff):
+                    if len(dEntries.keys()) == 18:
+                        if sum(dEntries.values())//18 == int(cutoff):
                             return True
                         else:
                             pass
                     else:
                         pass
                 else:
-                    dic[out] += 1
-                    with open(somefile, "a") as sf:
+                    dEntries[out] += 1
+                    with open(outFile, "a") as sf:
                         entry = (str(out) + "\t" + str(num) + "\t" + str(dst) + "\n")
                         sf.write(entry)
                     sf.close()
             else:
-                dic[out] = 1
-                with open(somefile, "a") as sf:
+                dEntries[out] = 1
+                with open(outFile, "a") as sf:
                     entry = (str(out) + "\t" + str(num) + "\t" + str(dst) + "\n")
                     sf.write(entry)
                 sf.close()
