@@ -11,15 +11,14 @@ import os
 from pymol import cmd
 
 
-def fromList(ftList, ftOrig, ftPathOut):
+def fromList(entry, ftOrig, ftPathOut):
     """A generalized script that generates an FT file from a list
     """
-    for entry in ftList:
-        with open(ftOrig, 'r') as rf:
-            for num, ff in enumerate(rf):
-                if num == int(entry):
-                    with open(ftPathOut, 'a') as ftOut:
-                        ftOut.write(ff)
+    with open(ftOrig, 'r') as rf:
+        for num, ff in enumerate(rf):
+            if num == int(entry):
+                with open(ftPathOut, 'a') as ftOut:
+                    ftOut.write(ff)
 
 
 def fromPymolSession(session, ftOrig, ftPathOut):
