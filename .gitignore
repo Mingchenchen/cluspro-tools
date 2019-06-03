@@ -4,3 +4,4 @@
 # Other Sources
 *.pyc
 .ipynb_checkpoints
+.idea
