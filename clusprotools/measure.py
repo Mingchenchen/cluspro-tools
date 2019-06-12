@@ -103,3 +103,20 @@ def distance(sel1, sel2):
     dist = np.linalg.norm(sel1_coords-sel2_coords, axis=1)
 
     return dist
+
+def id_binding_interface(ligand, receptor, interface_radius=9.0):
+    """
+    Identifies the binding interface of a ligand-receptor complex
+    :param ligand: ProDy atom group for ligand
+    :param receptor: ProDy atom group for receptor
+    :param interface_radius: float representing interface radius
+    :return: coordinates of ligand and receptor interfaces
+    """
+
+    lig_coords = ligand.getCoords()
+    rec_coords = receptor.getCoords()
+
+    rec_interface = receptor.select("all within {} of ligand".format(interface_radius), radius=interface_radius, ligand=lig_coords)
+    lig_interface = ligand.select("all within {} of receptor".format(interface_radius), radius=interface_radius, receptor=rec_coords)
+
+    return lig_interface, rec_interface

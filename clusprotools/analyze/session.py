@@ -11,16 +11,23 @@ from __future__ import division
 import os
 from glob import glob
 from clusprotools.sblu import pwrmsd, rmsd
+from clusprotools.io import extract
 import pandas as pd
 
 
-class session:
-    """Do cool stuff with sessions
-    """
-
-    # todo: make this so I can add a custom ft file which can be used to calculate interface rmsd/pwrmsd
+class Session:
 
     def __init__(self, session_path, crys_lig=None):
+
+        # Raw Files:
+
+        self.ft0_raw = os.path.join(self.session_path, 'ft.000.00.gz')
+        self.ft2_raw = os.path.join(self.session_path, 'ft.002.00.gz')
+        self.ft4_raw = os.path.join(self.session_path, 'ft.004.00.gz')
+        self.ft6_raw = os.path.join(self.session_path, 'ft.006.00.gz')
+        self.rot_raw = os.path.join(self.session_path, 'prms/rot70k.0.0.4.prm')
+        self.lig_raw = os.path.join(self.session_path, 'lig.pdb.gz')
+        self.rec_raw = os.path.join(self.session_path, 'rec.pdb.gz')
 
         # Standard:
         self.session_path = session_path
@@ -41,9 +48,32 @@ class session:
         if crys_lig is None:
             self.crys_lig = self.lig
 
+    def convert(self, working_path, contents=None):
+        """
+        Converts a raw session comprising a raw ClusPro output into a "working session"
+        :param working_path: path of destination for working session directory
+        :param contents: list of contents to convert, default = None
+        """
+        DEFAULT_CONTENTS = [self.ft0_raw, self.ft2_raw, self.ft4_raw,
+                            self.ft6_raw, self.lig_raw, self.rec_raw, self.rot_raw]
+
+        EXTRACTABLE_CONTENTS = [self.ft0_raw, self.ft2_raw, self.ft4_raw,
+                                self.ft6_raw, self.lig_raw, self.rec_raw]
+        if contents is None:
+            contents = DEFAULT_CONTENTS
+
+        for item in contents:
+
+            if item in EXTRACTABLE_CONTENTS:
+                extract(item, working_path)
+            elif item == self.rot_raw:
+                shutil.copy(self.rot_raw, working_path)
+
     def interface_rmsd(self, ft_type, output=None):
-        """Generates the interface rmsd for a given ligand/receptor complex and ft ft_type
-        ft_type (list): (e.g., 0, 2, 4, 6)
+        """
+        Generates the interface rmsd for a given ligand/receptor complex and ft_type
+        :param ft_type: string list for corresponding ft type (e.g., ["0"] or ["0", "6"]
+        :param output: default is in the same session folder
         """
 
         option = "--only-interface --rec {}".format(self.rec)
@@ -67,9 +97,13 @@ class session:
                 print("ft_type should be in a list (e.g., ['0'] or ['2', '6'])")
 
     def interface_pwrmsd(self, ft_type, output=None, num_entries=None, ft_special=None):
-        """Generates the interface pwrmsd for a given ligand/receptor complex and ft ft_type
-        ft_type (list): (e.g., 0, 2, 4, 6, special)
-        num_entries (int)
+
+        """
+        Generates the interface pwrmsd for a given ligand/receptor complex and ft_type
+        :param ft_type: string list for corresponding ft type (e.g., ["0"] or ["0", "special"]
+        :param output: default is in the same session folder
+        :param num_entries: default is 1000 ft entries used for interface_pwrmsd calculation
+        :param ft_special: file path for ft_type="special" flag
         """
 
         DEFAULT_NUM_ENTRIES = 1000
@@ -98,11 +132,32 @@ class session:
             else:
                 print("ft_type should be in a list (e.g., ['0'] or ['2', 'special'])")
 
-    def near_native(self, threshold, rmsd=10.0):
-        #todo: rework so this has a range of rmsd.  For example I want to know how many structures there are b/w [1, 3], [3, 6] etc.
-        """Returns the number of near native structures
+    def pose_rmsd(self, num_entry, rmsd_file=None):
         """
-        for irmsd_file in self.irmsd:
+        Returns the rmsd for a specified pose
+        :param num_entry: number of ft entry
+        :param rmsd_file: default is the interface_rmsd, can be file path to other rmsd file
+        :return: rmsd for the pose @ the specified num_entry
+        """
+        if rmsd_file is None:
+            rmsd_file = self.irmsd
+
+        for rfile in rmsd_file:
+            df = pd.read_csv(rfile, names=["RMSD"])
+            return df.iloc[num_entry]
+
+    def near_native(self, threshold, rmsd=10.0, rmsd_file=None):
+        """
+        Generates information for near native poses
+        :param threshold: number of ft entries to consider
+        :param rmsd: number representing maximum rmsd to consider
+        :param rmsd_file: default is the interface_rmsd, can be file path to other rmsd file
+        :return: session name, threshold, number of near native poses, near native pose entries
+        """
+        if rmsd_file is None:
+            rmsd_file = self.irmsd
+
+        for irmsd_file in rmsd_file:
             df = pd.read_csv(irmsd_file, names=["RMSD"])
             df = df[:int(threshold)]
             bad_poses = df[df["RMSD"] > rmsd].index
@@ -113,3 +168,33 @@ class session:
             base_name = os.path.basename(irmsd_file)
             base_name = base_name.split(".")[0]
             return base_name, threshold, num_hits, hits
+
+    def get_ft(self, ft_type):
+        """
+        Returns the ft file based on an entered ft_type
+        :param ft_type: string representing ft-type (e.g., "000")
+        :return: requested ft file path
+        """
+
+        if ft_type == "000":
+            ft = self.ft0
+        if ft_type == "002":
+            ft = self.ft2
+        if ft_type == "004":
+            ft = self.ft4
+        if ft_type == "006":
+            ft = self.ft6
+
+        return ft
+
+    def get_atomgroup(self, mol_name):
+        """
+        Returns an atom group for a specified molecule
+        :param mol_name: string representing the base name of a molecule
+        :return: the ProDy atom group
+        """
+
+        mol_path = os.path.join(self.session_path, mol_name)
+        mol = parsePDB(mol_path)
+
+        return mol
