@@ -76,7 +76,7 @@ class Session:
         self.align_map = glob(os.path.join(self.session_path, '*.pse'))
         self.irmsd = glob(os.path.join(self.session_path, '*.irmsd'))
         self.ipwrmsd = glob(os.path.join(self.session_path, '*.ipwrmsd'))
-        self.ipwrmsd = glob(os.path.join(self.session_path, '*.ipwrmsd'))
+        self.pwrmsd = glob(os.path.join(self.session_path, '*.pwrmsd'))
         self.rmsd = glob(os.path.join(self.session_path, '*.rmsd'))
 
         if crys_lig is None:
