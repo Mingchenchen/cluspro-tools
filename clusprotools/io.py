@@ -32,4 +32,4 @@ def extract(file_path, destination_path=None, gzip_options=None):
 
     proc = Popen(cmd, shell=True, stderr=PIPE, stdout=PIPE)
     proc.communicate()
-    print cmd
+    print(cmd)

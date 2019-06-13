@@ -31,7 +31,8 @@ def rmsd(lig, crys_lig, ft, rot, output, options=None):
         options = DEFAULT_RMSD_OPTIONS
 
     cmd = 'sblu measure ftrmsd -o {} {} {} {} {} {}'.format(output, options, lig, crys_lig, ft, rot)
-    print cmd
+    print(cmd)
+
     proc = Popen(cmd, shell=True, stderr=PIPE, stdout=PIPE)
     so, se = proc.communicate()
 
