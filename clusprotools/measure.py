@@ -26,6 +26,7 @@ def vdw_radii(sel):
         "P": 1.80,
         "S": 1.75,
         "CL": 1.75,
+        "AS": 1.7
     }
 
     radii = [vdwSwitch[i] for i in sel]

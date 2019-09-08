@@ -7,11 +7,10 @@
 # Transforms proteins using rotational and translational matricies
 
 
-from prody import *
-import numpy as np
 from itertools import islice
 import linecache
 
+import numpy as np
 
 FTRESULT_DTYPE = np.dtype([('roti', 'i4'), ('tv', ('f8', 3)), ('E', 'f8')])
 

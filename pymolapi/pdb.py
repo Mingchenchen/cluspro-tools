@@ -14,13 +14,13 @@ class PDB:
     def __init__(self, pdb, chain=None, small_molecule=None):
 
         # Defined Features:
-        if os.path.exists(pdb):
-            self.pdb_path = pdb
-            self.pdb = os.path.basename(pdb).split(".")[0]
-            self.get = cmd.load('{}'.format(self.pdb_path))
-        else:
-            self.pdb = pdb
-            self.get = cmd.fetch('{}'.format(self.pdb))
+        # if os.path.isfile(pdb):
+        #     self.pdb_path = pdb
+        #     self.pdb = os.path.basename(pdb).split(".")[0]
+        #     self.get = cmd.load('{}'.format(self.pdb_path))
+        # else:
+        self.pdb = pdb
+        self.get = cmd.fetch('{}'.format(self.pdb))
 
         self.chain = chain
         self.small_molecule = small_molecule
@@ -82,3 +82,4 @@ class PDB:
             cmd.fetch('{}'.format(target))
             self.load
             cmd.align('{}'.format(self.pdb), '{}'.format(target))
+

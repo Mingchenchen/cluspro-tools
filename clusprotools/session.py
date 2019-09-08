@@ -7,6 +7,7 @@
 from __future__ import division
 import os
 from glob import glob
+import shutil
 
 import numpy as np
 import pandas as pd
@@ -32,7 +33,7 @@ class RawSession:
         self.rec_raw = os.path.join(self.raw_path, 'rec.pdb.gz')
 
         if crys_lig is None:
-            self.crys_lig = self.lig
+            self.crys_lig = self.lig_raw
 
     def convert(self, session_path, contents=None):
         """
@@ -72,7 +73,8 @@ class Session:
         self.session_name = os.path.basename(self.session_path)
 
         # Optional:
-        self.mobile_lig = os.path.join(self.session_path, 'mobile_lig.pdb')
+        self.mobile_lig = os.path.join(self.session_path, 'mobile-lig.pdb')
+        self.rec_lig = os.path.join(self.session_path, 'rec-lig.pdb')
         self.align_map = glob(os.path.join(self.session_path, '*.pse'))
         self.irmsd = glob(os.path.join(self.session_path, '*.irmsd'))
         self.ipwrmsd = glob(os.path.join(self.session_path, '*.ipwrmsd'))
@@ -217,9 +219,8 @@ class Component(Session):
             session = super().from_component(self.component_path)
             rmsd_file = session.irmsd
 
-        for rfile in rmsd_file:
-            df = pd.read_csv(rfile, names=["RMSD"])
-            return df.iloc[num_entry]
+        df = pd.read_csv(rmsd_file, names=["RMSD"])
+        return df.iloc[num_entry]
 
     def xform(self, ft_type, center=None):
         """
@@ -227,7 +228,7 @@ class Component(Session):
         :param ft_type: string representing ft-type (e.g., "000")
         :return: transformed coordinate of component
         """
-        session = super().from_component(self.component_path)
+        session = Session(os.path.split(self.component_path)[0])
         ft_path = session.get_ft(ft_type)
         rot_path = session.rot
         protein = self.atom_group
