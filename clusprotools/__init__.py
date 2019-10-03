@@ -2,7 +2,7 @@
 
 from __future__ import division
 
-from .io import *
+from .inout import *
 from .measure import *
 from .sblu import *
 from .transform import *

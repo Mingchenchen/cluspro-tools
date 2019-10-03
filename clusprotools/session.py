@@ -14,7 +14,7 @@ import pandas as pd
 from prody import *
 
 from .sblu import pwrmsd, rmsd
-from .io import extract
+from .inout import extract
 from .transform import read_ftresults, read_rotations, apply_ftresults_atom_group
 
 
@@ -84,7 +84,7 @@ class Session:
         if crys_lig is None:
             self.crys_lig = self.lig
 
-    def interface_rmsd(self, ft_type, output=None):
+    def interface_rmsd(self, ft_type, ft_special=None, output=None):
         """
         Generates the interface rmsd for a given ligand/receptor complex and ft_type
         :param ft_type: string list for corresponding ft type (e.g., ["0"] or ["0", "6"]
@@ -108,6 +108,8 @@ class Session:
                 rmsd(self.lig, self.crys_lig, self.ft4, self.rot, output, option)
             elif ft == "6":
                 rmsd(self.lig, self.crys_lig, self.ft6, self.rot, output, option)
+            elif ft == "special":
+                rmsd(self.lig, self.crys_lig, ft_special, self.rot, output, option)
             else:
                 print("ft_type should be in a list (e.g., ['0'] or ['2', '6'])")
 
