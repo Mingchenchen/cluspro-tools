@@ -1,39 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# ./measure.py
-
-# Description:
-# Measures things
 from __future__ import division
 from prody import *
 import numpy as np
 from sklearn.metrics.pairwise import euclidean_distances
-
-
-def vdw_radii(sel):
-    """
-    Returns a VdW radii for an element name (e.g., AtomGroup.getElements())
-    :param sel: list of str(element_names)
-    :return: numpy array of VdW radii
-    """
-    vdwSwitch = {
-        "H": 1.10,
-        "C": 1.70,
-        "N": 1.55,
-        "O": 1.52,
-        "F": 1.47,
-        "P": 1.80,
-        "S": 1.75,
-        "CL": 1.75,
-        "AS": 1.7
-    }
-
-    radii = [vdwSwitch[i] for i in sel]
-    radii = np.asarray(radii)
-
-    return radii
-
 
 def pairwise_distance(sel1, sel2):
     """
