@@ -1,3 +1,6 @@
+import os
+import shutil
+
 class CompressedSession:
 
     def __init__(self, raw_path, crys_lig=None):
@@ -34,4 +37,4 @@ class CompressedSession:
             if item in EXTRACTABLE_CONTENTS:
                 extract(item, session_path)
             elif item == self.rot_raw:
-                shutil.copy(self.rot_raw, session_path)
+                shultil.copy(self.rot_raw, session_path)

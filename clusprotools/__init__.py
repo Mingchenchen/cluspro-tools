@@ -12,3 +12,5 @@ from .preprocess import (
     CompressedSession,
     extract
 )
+
+from Session import Session
