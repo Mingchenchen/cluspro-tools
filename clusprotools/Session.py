@@ -127,7 +127,7 @@ class Session:
             file_ft = self.id_file('ft')
 
         if custom_ft:
-            if self.dir_custom_ft is None
+            if self.dir_custom_ft is None:
 
         _rmsd(self.lig, self.crys_lig, file_ft, self.rot)
 
