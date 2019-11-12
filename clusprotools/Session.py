@@ -1,135 +1,158 @@
 import os
+import shutil
+
 from glob import glob
-import sblu_api.rmsd as _rmsd
-import sblu_api.pwrmsd as _pwrmsd
-import sblu_api.cluster as _cluster
+
+from clusprotools.sblu_api import rmsd, pwrmsd, cluster
 
 
 class Session:
 
-    def __init__(self, session_path, crys_lig=None, type_ft=None, custom_lig=None, custom_rec=None, custom_ft=None,
-                 custom_rmsd=None, custom_pwrmsd=None, dir_custom_ft=None, dir_custom_pwrmsd=None, dir_custom_rmsd=None,
-                 file_ep_coords=None):
+    def __init__(self, session_path, raw=False, custom=False):
 
-        # Standard Files:
+        # Path info
         self.session_path = session_path
-        self.ft0 = os.path.join(self.session_path, 'ft.000.00')
-        self.ft2 = os.path.join(self.session_path, 'ft.002.00')
-        self.ft4 = os.path.join(self.session_path, 'ft.004.00')
-        self.ft6 = os.path.join(self.session_path, 'ft.006.00')
-        self.rot = os.path.join(self.session_path, 'rot70k.0.0.4.prm')
-        self.lig = os.path.join(self.session_path, 'lig.pdb')
-        self.rec = os.path.join(self.session_path, 'rec.pdb')
+        self.session_name = os.path.basename(self.session_path)
+        os.chdir(self.session_path)
 
-        if crys_lig is None:
-            self.crys_lig = self.lig
+        self.raw = raw
 
-        # Standard Directories:
-        self.dir_cluster = os.path.join(self.session_path, 'cluster')
-        self.dir_pwrmsd = os.path.join(self.session_path, 'pwrmsd')
-        self.dir_custom_ft = os.path.join(self.session_path, 'custom_ft')
-        self.dir_rmsd = os.path.join(self.session_path, 'rmsd')
+        if self.raw:
+            # Raw ClusPro result files of interest:
+            self.ft0_raw = 'ft.000.00.gz'
+            self.ft2_raw = 'ft.002.00.gz'
+            self.ft4_raw = 'ft.004.00.gz'
+            self.ft6_raw = 'ft.006.00.gz'
+            self.lig_raw = 'lig.pdb.gz'
+            self.rec_raw = 'rec.pdb.gz'
+            self.rot_raw = os.path.join('prms', 'rot70k.0.0.4.prm')
 
-        standard_directories = [self.dir_cluster, self.dir_rmsd, self.dir_custom_ft, self.dir_pwrmsd]
+        else:
+            # Standard session files of interest:
+            self.ft0 = 'ft.000.00'
+            self.ft2 = 'ft.002.00'
+            self.ft4 = 'ft.004.00'
+            self.ft6 = 'ft.006.00'
+            self.rot = 'rot70k.0.0.4.prm'
+            self.lig = 'lig.pdb'
+            self.rec = 'rec.pdb'
 
-        for directory in standard_directories:
-            if not os.path.exists(directory):
-                os.mkdir(directory)
+        # Custom Session Information:
+        self.custom = custom
+        self.ft_file = None
+        self.lig_crys = None
+        self.lig_custom = None
+        self.rec_custom = None
 
-        # Custom Information:
-        self.type_ft = type_ft
+        if custom:
+            allowed_keys = {'lig_crys', 'lig_custom', 'rec_custom', 'ft_custom', 'rmsd_custom',
+                            'pwrmsd_custom', 'coord_custom', 'pdb_custom', 'cluster_dir', 'ft_dir', 'pdb_dir',
+                            'result_dir'}
+            for key, value in kwargs.items():
+                setattr(self, key, value)
 
-        # Custom Files:
-        self.custom_ft = custom_ft
-        self.custom_lig = custom_lig
-        self.custom_rec = custom_rec
-        self.custom_rmsd = custom_rmsd
-        self.custom_pwrmsd = custom_pwrmsd
-        self.file_ep_coords = file_ep_coords
+                if key not in allowed_keys:
+                    print 'WARNING: Session attribute {} is not allowed.  Proceed with caution.'.format(key)
 
-        # Custom Directories:
-        self.dir_custom_ft = dir_custom_ft
-        self.dir_custom_pwrmsd = dir_custom_pwrmsd
-        self.dir_custom_rmsd = dir_custom_rmsd
+    @property
+    def ft_file(self):
+        return self.ft_file
 
-    def id_file(self, file_type, custom_file=False):
-        if self.type_ft is None:
-            print 'No ft type is selected'
-            return None
+    @property
+    def lig_file(self):
+        return self.lig
 
-        type_ft = self.type_ft
-        if len(self.type_ft) == 1:
-            type_ft = '00{}'.format(self.type_ft)
+    @ft_file.setter
+    def ft_file(self, ft_type, ft_file_path=None, ft_dir_path=None):
 
-        if file_type == 'ft':
-            if custom_file:
-                if self.dir_custom_ft is None:
-                    print 'No custom ft directory selected'
-                    return None
+        if os.path.isfile(ft_file_path):
+            self.ft_file = ft_file_path
 
-                file_ft = glob(os.path.join(self.dir_custom_ft, '*.{}.*'.format(type_ft)))
+        if os.path.isdir(ft_dir_path):
+            self.ft_file = glob(os.path.join(ft_dir_path, '*.{}.ft'.format(ft_type)))[0]
 
-                if len(file_ft) == 1:
-                    return file_ft[0]
+        else:
+            if ft_type == '0':
+                self.ft_file = self.ft0
+            if ft_type == '2':
+                self.ft_file = self.ft2
+            if ft_type == '4':
+                self.ft_file = self.ft4
+            if ft_type == '6':
+                self.ft_file = self.ft6
 
-                else:
-                    print 'Multiple ft files selected: {}'.format(file_ft)
-                    return None
+    @lig_file.setter
+    def lig_file(self, lig_path):
+        self.lig = lig_path
 
-            else:
-                if type_ft == '000':
-                    return self.ft0
-                if type_ft == '002':
-                    return self.ft2
-                if type_ft == '004':
-                    return self.ft4
-                if type_ft == '006':
-                    return self.ft6
+    def convert_raw(self, dest_parent_dir, initialize=True, dest_session_name=None, contents=None, delete_src=False):
+        """
+        Takes specific contents from a raw ClusPro job and stores them in a new session directory
+        :param dest_parent_dir: path for destination parent directory
+        :param initialize: flag indicating whether to intialize the destination session
+        :param dest_session_name: string for destination path basename
+        :param contents: list of compressed files to extract to new_session_path
+        :param delete_src: flag indicating whether to delete source directory
+        """
 
-        if file_type == 'rmsd':
-            if self.dir_custom_rmsd is None:
-                print 'No custom rmsd directory selected'
-                return None
+        from .utilities import extract
 
-            file_rmsd = glob(os.path.join(self.dir_custom_rmsd, '*.{}.*'.format(type_ft)))
+        if self.raw:
+            default_contents = [self.ft0_raw, self.ft2_raw, self.ft4_raw,
+                                self.ft6_raw, self.lig_raw, self.rec_raw, self.rot_raw]
 
-            if len(file_rmsd) == 1:
-                return file_rmsd[0]
+            if contents is None:
+                contents = default_contents
 
-            else:
-                print 'Multiple rmsd files selected: {}'.format(file_rmsd)
-                return None
+            if dest_session_name is None:
+                dest_session_name = self.session_name
 
-        if file_type == 'pwrmsd':
-            if self.dir_custom_pwrmsd is None:
-                print 'No custom pwrmsd directory selected'
-                return None
+            dest_session_path = os.path.join(dest_parent_dir, dest_session_name)
+            convert_complete = False
 
-            file_pwrmsd = glob(os.path.join(self.dir_custom_pwrmsd, '*.{}.*'.format(type_ft)))
+            try:
+                os.mkdir(dest_session_path)
 
-            if len(file_pwrmsd) == 1:
-                return file_pwrmsd[0]
+                for item in contents:
+                    if item.endswith('.gz'):
+                        extract(item, dest_session_path)
 
-            else:
-                print 'Multiple pwrmsd files selected: {}'.format(file_pwrmsd)
-                return None
+                    else:
+                        shutil.copy(item, dest_session_path)
 
-    def rmsd(self, custom_ft=False, custom_lig=False):
+                convert_complete = True
 
-        if self.type_ft is None and self.custom_ft is None:
-            print 'No ft type or ft file was selected'
-            return None
+            except:
+                print 'WARNING: {} Raw conversion failed'.format(self.session_name)
 
-        if custom_ft and self.custom_ft is None:
-            file_ft = self.id_file('ft', custom_file=True)
+            if initialize:
+                os.chdir(dest_session_path)
+                cluster_dir = 'cluster'
+                rmsd_dir = 'rmsd'
+                pdb_dir = 'pdb'
+                ft_dir = 'ft'
+                result_dir = 'result'
+                standard_dirs = [cluster_dir, rmsd_dir, ft_dir, pdb_dir, result_dir]
 
-        elif custom_ft:
-            file_ft = self.id_file('ft')
+                for dir in standard_dirs:
+                    os.mkdir(dir)
 
-        if custom_ft:
-            if self.dir_custom_ft is None:
+            if delete_src and convert_complete:
+                shutil.rmtree(self.session_path)
 
-        _rmsd(self.lig, self.crys_lig, file_ft, self.rot)
+        else:
+            print '{} is not set as raw session. Flag with \'raw=True\' '.format(self.session_path)
+            return False
 
-
+    # def gen_rmsd(self, lig_file=None, lig_crys=None, ft_file=None, rotprm=None, output=None, sort_ftresults=False,
+    #              nftresults=None, only_ca=False, only_backbone=False, only_interface=False, interface_radius=10.0,
+    #              rec=None, center_pdb=None):
+    #
+    #     input_check = False
+    #
+    #     if self.ft_file is None and ft_file is None:
+    #         print 'ERROR: No ft file selected'
+    #
+    #     if self.lig is None and lig_file is None:
+    #         print 'ERROR: No lig_file selected'
 

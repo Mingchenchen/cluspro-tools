@@ -8,8 +8,7 @@ from .measure import (
     interface
 )
 
-from .preprocess import (
-    CompressedSession,
+from .utilities import (
     extract
 )
 
