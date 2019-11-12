@@ -8,7 +8,7 @@ from clusprotools.sblu_api import rmsd, pwrmsd, cluster
 
 class Session:
 
-    def __init__(self, session_path, raw=False, custom=False):
+    def __init__(self, session_path, raw=False, custom=False, **kwargs):
 
         # Path info
         self.session_path = session_path
