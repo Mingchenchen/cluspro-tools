@@ -1,16 +1,23 @@
-from __future__ import print_function
 
-import numpy as np
+
 from scipy.spatial.distance import cdist
-
+import numpy as np
 from prody import parsePDB
 
-from sblu.ft import (read_rotations_stream, read_ftresults_stream, apply_ftresults_atom_group)
+from sblu.ft import *
 from sblu.rmsd import calc_rmsd
 
 
 def rmsd(lig_file, lig_crys, ftfile, rotprm, output, sort_ftresults=False, nftresults=None, only_ca=False,
          only_backbone=False, only_interface=False, interface_radius=10.0, rec=None, center_pdb=None):
+
+    # ft = open(ftfile, "r")
+    # rot = open(rotprm, "r")
+    #
+    # if ft.mode and rot.mode == "r":
+    #     print("I am reading")
+    #     ftfile = ft.read()
+    #     rotprm = rot.read()
 
     if only_interface and rec is None:
         print('Receptor is required')
@@ -24,9 +31,9 @@ def rmsd(lig_file, lig_crys, ftfile, rotprm, output, sort_ftresults=False, nftre
         ftresults.sort(order='E', kind='mergesort')  # only mergesort is stable
         ftresults = ftresults[:nftresults]
     else:
-        ftresults = read_ftresults_stream(ftfile, limit=nftresults)
+        ftresults = read_ftresults(ftfile, limit=nftresults)
 
-    rotations = read_rotations_stream(rotprm)
+    rotations = read_rotations(rotprm)
 
     if center_pdb:
         center_lig = parsePDB(center_pdb)
@@ -56,5 +63,9 @@ def rmsd(lig_file, lig_crys, ftfile, rotprm, output, sort_ftresults=False, nftre
         interface = np.any(dists < r_sq, axis=0).nonzero()[0]
 
     rmsds = calc_rmsd(transformed, lig_crys, interface)
+    print output
+    f = open(output, 'a')
     for rms in rmsds:
-        print("{:.2f}".format(rms), file=output)
+        f.write("{:.2f}\n".format(rms))
+    f.close()
+
